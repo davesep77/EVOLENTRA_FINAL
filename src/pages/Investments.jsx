@@ -62,26 +62,10 @@ export default function Investments() {
         }
 
         try {
-            const response = await fetch('/api/investments/create.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    plan_id: selectedPlan.id,
-                    amount: investAmount,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || 'Investment failed');
-            }
-
+            await createInvestment(user.id, selectedPlan.id, investAmount);
             setSuccess('Investment created successfully!');
             setShowModal(false);
-            fetchData(); // Refresh data
+            fetchData();
         } catch (err) {
             setError(err.message);
         }

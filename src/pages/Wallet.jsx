@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getWalletBalance, createWithdrawalRequest } from '../services/walletService';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 export default function Wallet() {
+    const { user } = useAuth();
     const [wallets, setWallets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [withdrawing, setWithdrawing] = useState(false);
@@ -14,19 +17,15 @@ export default function Wallet() {
     });
 
     useEffect(() => {
-        fetchWalletBalance();
-    }, []);
+        if (user?.id) {
+            fetchWalletBalance();
+        }
+    }, [user]);
 
     const fetchWalletBalance = async () => {
         try {
-            const response = await fetch('/api/wallet/balance.php', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                setWallets(data.data.wallets || []);
-            }
+            const data = await getWalletBalance(user.id);
+            setWallets(data.wallets || []);
         } catch (error) {
             console.error('Error fetching wallet balance:', error);
         } finally {
@@ -39,28 +38,19 @@ export default function Wallet() {
         setWithdrawing(true);
 
         try {
-            const response = await fetch('/api/wallet/withdraw.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(withdrawForm)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert('Withdrawal request submitted successfully! It will be processed within 24-48 hours.');
-                setShowWithdrawModal(false);
-                setWithdrawForm({ currency: 'USDT', amount: '', wallet_address: '' });
-                fetchWalletBalance();
-            } else {
-                alert(data.message || 'Failed to submit withdrawal request');
-            }
+            await createWithdrawalRequest(
+                user.id,
+                withdrawForm.currency,
+                parseFloat(withdrawForm.amount),
+                withdrawForm.wallet_address
+            );
+            alert('Withdrawal request submitted successfully! It will be processed within 24-48 hours.');
+            setShowWithdrawModal(false);
+            setWithdrawForm({ currency: 'USDT', amount: '', wallet_address: '' });
+            fetchWalletBalance();
         } catch (error) {
             console.error('Error submitting withdrawal:', error);
-            alert('An error occurred. Please try again.');
+            alert(error.message || 'An error occurred. Please try again.');
         } finally {
             setWithdrawing(false);
         }

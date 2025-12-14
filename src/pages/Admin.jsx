@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getWithdrawalRequests, processWithdrawalRequest } from '../services/adminService';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 export default function Admin() {
+    const { user } = useAuth();
     const [withdrawals, setWithdrawals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(null);
@@ -14,32 +17,26 @@ export default function Admin() {
     });
 
     useEffect(() => {
-        fetchWithdrawals();
-    }, []);
+        if (user?.id) {
+            fetchWithdrawals();
+        }
+    }, [user]);
 
     const fetchWithdrawals = async () => {
         try {
-            const response = await fetch('/api/admin/withdrawals.php', {
-                credentials: 'include'
+            const withdrawalList = await getWithdrawalRequests();
+            setWithdrawals(withdrawalList);
+
+            const pending = withdrawalList.filter(w => w.status === 'pending').length;
+            const approved = withdrawalList.filter(w => w.status === 'approved' || w.status === 'completed').length;
+            const rejected = withdrawalList.filter(w => w.status === 'rejected').length;
+
+            setStats({
+                pending,
+                approved,
+                rejected,
+                total: withdrawalList.length
             });
-            const data = await response.json();
-
-            if (data.success) {
-                const withdrawalList = data.data.withdrawals || [];
-                setWithdrawals(withdrawalList);
-
-                // Calculate stats
-                const pending = withdrawalList.filter(w => w.status === 'pending').length;
-                const approved = withdrawalList.filter(w => w.status === 'approved' || w.status === 'completed').length;
-                const rejected = withdrawalList.filter(w => w.status === 'rejected').length;
-
-                setStats({
-                    pending,
-                    approved,
-                    rejected,
-                    total: withdrawalList.length
-                });
-            }
         } catch (error) {
             console.error('Error fetching withdrawals:', error);
         } finally {
@@ -55,30 +52,12 @@ export default function Admin() {
         setProcessing(id);
 
         try {
-            const response = await fetch('/api/admin/withdrawals.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    withdrawal_id: id,
-                    action: action,
-                    admin_notes: notes
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert(`Withdrawal ${action}d successfully!`);
-                fetchWithdrawals();
-            } else {
-                alert(data.message || `Failed to ${action} withdrawal`);
-            }
+            await processWithdrawalRequest(id, action, user.id, notes);
+            alert(`Withdrawal ${action}d successfully!`);
+            fetchWithdrawals();
         } catch (error) {
             console.error('Error processing withdrawal:', error);
-            alert('An error occurred. Please try again.');
+            alert(error.message || 'An error occurred. Please try again.');
         } finally {
             setProcessing(null);
         }

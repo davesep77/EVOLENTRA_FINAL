@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getDashboardData } from '../services/dashboardService';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 export default function Dashboard() {
+    const { user } = useAuth();
     const [stats, setStats] = useState({
         totalInvested: 0,
         totalROI: 0,
@@ -14,38 +17,22 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        if (user?.id) {
+            fetchDashboardData();
+        }
+    }, [user]);
 
     const fetchDashboardData = async () => {
         try {
-            // Fetch wallet balance
-            const walletRes = await fetch('/api/wallet/balance.php');
-            const walletData = await walletRes.json();
-
-            // Fetch investments
-            const investRes = await fetch('/api/investments/user_investments.php');
-            const investData = await investRes.json();
-
-            if (walletData.success && investData.success) {
-                const totalBalance = walletData.data.total_balance || 0;
-                const roiBalance = walletData.data.wallets?.find(w => w.currency === 'USDT')?.roi_balance || 0;
-                const refBalance = walletData.data.wallets?.find(w => w.currency === 'USDT')?.referral_balance || 0;
-                const binBalance = walletData.data.wallets?.find(w => w.currency === 'USDT')?.binary_balance || 0;
-
-                const investments = investData.data.investments || [];
-                const totalInvested = investments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
-
-                setStats({
-                    totalInvested,
-                    totalROI: roiBalance,
-                    referralEarnings: refBalance,
-                    binaryEarnings: binBalance,
-                    walletBalance: totalBalance,
-                });
-
-                setRecentInvestments(investments.slice(0, 5));
-            }
+            const data = await getDashboardData(user.id);
+            setStats({
+                totalInvested: data.totalInvested,
+                totalROI: data.totalROI,
+                referralEarnings: data.referralEarnings,
+                binaryEarnings: data.binaryEarnings,
+                walletBalance: data.walletBalance,
+            });
+            setRecentInvestments(data.recentInvestments);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getBinaryTree, getBinaryCommissions } from '../services/binaryService';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 export default function Binary() {
+    const { user } = useAuth();
     const [treeData, setTreeData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
@@ -15,27 +18,30 @@ export default function Binary() {
     });
 
     useEffect(() => {
-        fetchBinaryTree();
-    }, []);
+        if (user?.id) {
+            fetchBinaryTree();
+        }
+    }, [user]);
 
     const fetchBinaryTree = async () => {
         try {
-            const response = await fetch('/api/binary/tree.php', {
-                credentials: 'include'
-            });
-            const data = await response.json();
+            const [tree, commissions] = await Promise.all([
+                getBinaryTree(user.id),
+                getBinaryCommissions(user.id)
+            ]);
 
-            if (data.success) {
-                setTreeData(data.data.tree);
-                setStats({
-                    leftVolume: parseFloat(data.data.tree?.left_volume || 0),
-                    rightVolume: parseFloat(data.data.tree?.right_volume || 0),
-                    leftCarry: parseFloat(data.data.tree?.left_carry_forward || 0),
-                    rightCarry: parseFloat(data.data.tree?.right_carry_forward || 0),
-                    totalMatched: parseFloat(data.data.tree?.total_matched || 0),
-                    totalCommission: parseFloat(data.data.total_commission || 0)
-                });
-            }
+            setTreeData(tree);
+
+            const totalCommission = commissions.reduce((sum, c) => sum + parseFloat(c.commission_amount || 0), 0);
+
+            setStats({
+                leftVolume: parseFloat(tree?.left_volume || 0),
+                rightVolume: parseFloat(tree?.right_volume || 0),
+                leftCarry: parseFloat(tree?.left_carry_forward || 0),
+                rightCarry: parseFloat(tree?.right_carry_forward || 0),
+                totalMatched: parseFloat(tree?.total_matched || 0),
+                totalCommission
+            });
         } catch (error) {
             console.error('Error fetching binary tree:', error);
         } finally {
