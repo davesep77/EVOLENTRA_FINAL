@@ -1,0 +1,185 @@
+.multi-currency-display {
+    margin: 1.5rem 0;
+}
+
+.currency-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.currency-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.currency-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.currency-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Currency-specific colors */
+.currency-btc {
+    border-left: 3px solid #f7931a;
+}
+
+.currency-eth {
+    border-left: 3px solid #627eea;
+}
+
+.currency-usdt {
+    border-left: 3px solid #26a17b;
+}
+
+.currency-trx {
+    border-left: 3px solid #ef0027;
+}
+
+.currency-xrp {
+    border-left: 3px solid #23292f;
+}
+
+.currency-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.crypto-symbol {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.currency-btc .crypto-symbol {
+    color: #f7931a;
+}
+
+.currency-eth .crypto-symbol {
+    color: #627eea;
+}
+
+.currency-usdt .crypto-symbol {
+    color: #26a17b;
+}
+
+.currency-trx .crypto-symbol {
+    color: #ef0027;
+}
+
+.currency-xrp .crypto-symbol {
+    color: #23292f;
+}
+
+.currency-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.currency-name {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.currency-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    word-break: break-all;
+}
+
+.currency-rate {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.currency-update-time {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.currency-loading {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Compact variant for smaller displays */
+.currency-display-compact .currency-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.currency-display-compact .currency-item {
+    padding: 0.75rem;
+}
+
+.currency-display-compact .currency-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.currency-display-compact .crypto-symbol {
+    font-size: 1rem;
+}
+
+.currency-display-compact .currency-value {
+    font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .currency-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .currency-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animation */
+@keyframes currencyPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.currency-item.updating {
+    animation: currencyPulse 1s ease-in-out;
+}
